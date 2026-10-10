@@ -279,6 +279,13 @@ textarea{resize:vertical;min-height:90px;border:1px solid rgba(20,47,117,.2);pad
 .result textarea{min-height:150px;font-size:16px}
 .result .btns{margin-top:12px}
 .toast{color:var(--wine);margin:10px 0 0;min-height:1.6em}
+.rsvp .submit:disabled{opacity:.6;cursor:wait}
+.thanks{padding:24px 0 8px}
+.rsvp.sent > .eyebrow,.rsvp.sent > h2,.rsvp.sent > .lead{display:none}
+.rsvp.sent .thanks{padding:12px 0}
+.thanks[hidden],#rsvp-form[hidden]{display:none}
+.thanks-title{margin:0;font-weight:700;font-size:clamp(20px,3.6vw,26px);letter-spacing:.1em;text-transform:uppercase;color:var(--navy)}
+.thanks-text{margin:10px auto 0;max-width:28em;color:var(--slate)}
 
 footer{padding:44px 16px 52px;text-align:center;color:var(--ink-soft);background:#fff}
 footer .mono{font-weight:700;font-size:clamp(16px,3vw,22px);letter-spacing:.1em;text-transform:uppercase;color:var(--navy)}
@@ -470,6 +477,11 @@ footer button{margin-top:14px;background:none;border:0;cursor:pointer;font-famil
           <p class="toast" id="form-msg" role="status"></p>
         </form>
 
+        <div class="thanks" id="thanks" hidden>
+          <p class="thanks-title">Баярлалаа!</p>
+          <p class="thanks-text" id="thanks-text">Таны хариуг хүлээн авлаа.</p>
+        </div>
+
         <div class="result" id="result" hidden>
           <div class="field">
             <label for="reply">Таны бэлдсэн хариу</label>
@@ -495,6 +507,8 @@ footer button{margin-top:14px;background:none;border:0;cursor:pointer;font-famil
 <script>
 (() => {
   const WEDDING = new Date('2026-11-13T18:00:00+08:00');   // Улаанбаатарын цагаар
+  // Google Sheet-ийн Apps Script web app холбоос (google-apps-script.gs-ийг үз). Хоосон бол хариуг хуулж илгээх хувилбар ажиллана.
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbx_hnqQqf829Y6rNC6f81zn_kwXvstMk6TSitUuIMuOCI1TW9B6NsLh6HlB6y5-_T3e/exec';
   const body = document.body;
   const intro = document.getElementById('intro');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -604,7 +618,14 @@ footer button{margin-top:14px;background:none;border:0;cursor:pointer;font-famil
   const shareBtn = document.getElementById('share');
   if (navigator.share) shareBtn.hidden = false;
 
-  form.addEventListener('submit', e => {
+  const submitBtn = form.querySelector('.submit');
+  async function sendToSheet(data) {
+    const res = await fetch(SHEET_URL, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
+    const out = await res.json();
+    if (!out.ok) throw new Error(out.error || 'failed');
+  }
+
+  form.addEventListener('submit', async e => {
     e.preventDefault();
     const name = form.name.value.trim();
     const msg = document.getElementById('form-msg');
@@ -622,6 +643,28 @@ footer button{margin-top:14px;background:none;border:0;cursor:pointer;font-famil
       : `Би ${name} байна. Харамсалтай нь 2026.11.13-ны хуримын баярт тань хүрэлцэн очиж амжихгүй нь. Та бүхний аз жаргалыг чин сэтгэлээсээ хүсье.`;
     if (phone) text += `\nУтас: ${phone}`;
     if (wish) text += `\n\nЕрөөл: ${wish}`;
+
+    if (SHEET_URL) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Илгээж байна…';
+      try {
+        await sendToSheet({ name, phone, attend: form.attend.value, adults: coming ? adults : 0, kids: coming ? kids : 0, wish });
+        form.hidden = true;
+        form.closest('.rsvp').classList.add('sent');
+        document.getElementById('thanks-text').textContent = coming
+          ? 'Таны хариуг хүлээн авлаа. Хуримын баяраараа уулзахыг тэсэн ядан хүлээж байна.'
+          : 'Таны хариуг хүлээн авлаа. Халуун ерөөлд тань чин сэтгэлээсээ баярлалаа.';
+        const thanks = document.getElementById('thanks');
+        thanks.hidden = false;
+        thanks.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+        return;
+      } catch {
+        msg.textContent = 'Уучлаарай, илгээж чадсангүй. Доорх хариуг хуулж бидэнд мессежээр илгээнэ үү.';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Хариу илгээх';
+      }
+    }
     reply.value = text;
     result.hidden = false;
     result.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
