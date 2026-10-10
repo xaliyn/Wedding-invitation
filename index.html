@@ -257,16 +257,23 @@ textarea{resize:vertical;min-height:90px;border:1px solid rgba(20,47,117,.2);pad
 .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .choices input{position:absolute;opacity:0;pointer-events:none}
 .choices span{
-  display:block;text-align:center;padding:12px;border:1px solid rgba(20,47,117,.22);cursor:pointer;font-size:16px;
+  display:block;text-align:center;padding:12px;border:1px solid rgba(20,47,117,.22);cursor:pointer;font-size:15px;line-height:1.35;height:100%;display:flex;align-items:center;justify-content:center;
   transition:all .2s;
 }
 .choices input:checked + span{background:var(--baby);border-color:var(--baby-deep);color:var(--baby-ink)}
 .choices input:focus-visible + span{outline:2px solid var(--gold);outline-offset:2px}
-.stepper{display:inline-flex;align-items:center;border:1px solid rgba(20,47,117,.22)}
-.stepper button{width:46px;height:46px;border:0;background:transparent;cursor:pointer;font-size:22px;color:var(--baby-ink)}
-.stepper button:hover{background:rgba(169,203,234,.35)}
-.stepper output{min-width:54px;text-align:center;font-size:22px;font-variant-numeric:lining-nums tabular-nums}
-.field.count[hidden]{display:none}
+.guests[hidden]{display:none}
+.guest-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:end}
+.sub{display:block;font-size:14px;color:var(--ink);margin-bottom:8px}
+.sub small{font-size:12.5px;color:var(--ink-soft)}
+.select{
+  width:100%;appearance:none;-webkit-appearance:none;border:1px solid rgba(20,47,117,.22);border-radius:0;background:#fff;
+  padding:12px 40px 12px 14px;font-size:16px;color:var(--ink);cursor:pointer;outline:none;font-variant-numeric:lining-nums;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%232c5fb5' stroke-width='1.6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;
+}
+.select:focus{border-color:var(--blue)}
+.total{margin:10px 0 0;font-size:14px;color:var(--blue)}
 .rsvp .submit{width:100%;padding:16px;margin-top:6px;font-size:12px}
 .result{margin-top:28px;text-align:left;border-top:1px solid var(--line);padding-top:24px}
 .result textarea{min-height:150px;font-size:16px}
@@ -422,34 +429,44 @@ footer button{margin-top:14px;background:none;border:0;cursor:pointer;font-famil
     <div class="wrap">
       <div class="rsvp center reveal">
         <span class="eyebrow">Хариу</span>
-        <h2>Ирэх эсэхээ <em>мэдэгдэнэ үү</em></h2>
+        <h2>Хүрэлцэн ирэхээ <em>мэдэгдэнэ үү</em></h2>
         <p class="lead">Хариугаа урьдчилан мэдэгдвэл бид бэлтгэлээ сайн хангах боломжтой.</p>
 
         <form id="rsvp-form" novalidate>
           <div class="field">
-            <label for="name">Таны нэр</label>
-            <input class="input" id="name" name="name" placeholder="Жишээ нь: Батболд, Сараа" autocomplete="name" maxlength="100" required>
+            <label for="name">Таны бүтэн нэр (Овог, нэр)</label>
+            <input class="input" id="name" name="name" placeholder="Овог, нэрээ бичнэ үү" autocomplete="name" maxlength="100" required>
+          </div>
+          <div class="field">
+            <label for="phone">Утасны дугаар</label>
+            <input class="input" id="phone" name="phone" type="tel" inputmode="numeric" placeholder="99xxxxxx" autocomplete="tel" maxlength="20">
           </div>
           <fieldset class="field">
-            <legend>Хуримд</legend>
+            <legend>Хуримд хүрэлцэн ирэх эсэх</legend>
             <div class="choices">
-              <label><input type="radio" name="attend" value="yes" checked><span>Ирнэ</span></label>
-              <label><input type="radio" name="attend" value="no"><span>Ирж чадахгүй</span></label>
+              <label><input type="radio" name="attend" value="yes" checked><span>Баяртайгаар оролцоно</span></label>
+              <label><input type="radio" name="attend" value="no"><span>Харамсалтай нь амжихгүй</span></label>
             </div>
           </fieldset>
-          <div class="field count" id="count-field">
-            <label id="count-label">Хэдэн хүн ирэх</label>
-            <div class="stepper" role="group" aria-labelledby="count-label">
-              <button type="button" id="minus" aria-label="Хасах">−</button>
-              <output id="count" aria-live="polite">1</output>
-              <button type="button" id="plus" aria-label="Нэмэх">+</button>
+          <fieldset class="field guests" id="guests">
+            <legend>Хэдүүлээ хүрэлцэн ирэх вэ?</legend>
+            <div class="guest-grid">
+              <div>
+                <label class="sub" for="adults">Том хүн <small>(өөрийгөө оролцуулан)</small></label>
+                <select class="select" id="adults" name="adults"><option value="0">0</option><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select>
+              </div>
+              <div>
+                <label class="sub" for="kids">Хүүхэд</label>
+                <select class="select" id="kids" name="kids"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select>
+              </div>
             </div>
-          </div>
+            <p class="total" id="total" role="status">Нийт 1 хүн</p>
+          </fieldset>
           <div class="field">
             <label for="wish">Ерөөл, мэндчилгээ</label>
             <textarea id="wish" name="wish" maxlength="600" placeholder="Хос гэрлэгсдэд хүсэх ерөөлөө бичээрэй"></textarea>
           </div>
-          <button class="btn submit" type="submit">Хариу бэлдэх</button>
+          <button class="btn submit" type="submit">Хариу илгээх</button>
           <p class="toast" id="form-msg" role="status"></p>
         </form>
 
@@ -573,13 +590,14 @@ footer button{margin-top:14px;background:none;border:0;cursor:pointer;font-famil
 
   /* ── Хариу ── */
   const form = document.getElementById('rsvp-form');
-  const countEl = document.getElementById('count');
-  const countField = document.getElementById('count-field');
-  let count = 1;
-  const setCount = n => { count = Math.min(10, Math.max(1, n)); countEl.textContent = count; };
-  document.getElementById('minus').addEventListener('click', () => setCount(count - 1));
-  document.getElementById('plus').addEventListener('click', () => setCount(count + 1));
-  form.addEventListener('change', () => { countField.hidden = form.attend.value !== 'yes'; });
+  const guests = document.getElementById('guests');
+  const totalEl = document.getElementById('total');
+  const people = () => +form.adults.value + +form.kids.value;
+  const updateGuests = () => {
+    guests.hidden = form.attend.value !== 'yes';
+    totalEl.textContent = `Нийт ${people()} хүн`;
+  };
+  form.addEventListener('change', updateGuests);
 
   const result = document.getElementById('result');
   const reply = document.getElementById('reply');
@@ -593,11 +611,16 @@ footer button{margin-top:14px;background:none;border:0;cursor:pointer;font-famil
     if (!name) { msg.textContent = 'Нэрээ бичнэ үү.'; form.name.focus(); return; }
     msg.textContent = '';
     const wish = form.wish.value.trim();
+    const phone = form.phone.value.trim();
     const coming = form.attend.value === 'yes';
+    if (coming && people() === 0) { msg.textContent = 'Хүрэлцэн ирэх хүний тоогоо сонгоно уу.'; form.adults.focus(); return; }
+    const adults = +form.adults.value, kids = +form.kids.value;
     let text = `Сайн байна уу, Алтантулга, Пүрэвсүрэн!\n\n`;
     text += coming
-      ? `${name} — 2026.11.13-ны хуримд тань ${count} хүн хүрэлцэн ирнэ.`
-      : `${name} — харамсалтай нь 2026.11.13-ны хуримд тань хүрэлцэн ирж чадахгүй нь.`;
+      ? `Би ${name} байна. 2026.11.13-ны хуримын баярт тань баяртайгаар хүрэлцэн очно.\n` +
+        `Том хүн: ${adults}` + (kids ? `, хүүхэд: ${kids}` : '') + ` (нийт ${adults + kids} хүн)`
+      : `Би ${name} байна. Харамсалтай нь 2026.11.13-ны хуримын баярт тань хүрэлцэн очиж амжихгүй нь. Та бүхний аз жаргалыг чин сэтгэлээсээ хүсье.`;
+    if (phone) text += `\nУтас: ${phone}`;
     if (wish) text += `\n\nЕрөөл: ${wish}`;
     reply.value = text;
     result.hidden = false;
